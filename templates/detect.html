@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block page_title %}Crowd Image Detection & Identification{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 350px 1fr; gap: 1.5rem;">
+    <!-- Control Panel Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-cloud-arrow-up"></i> Upload Crowd Image</h3>
+        </div>
+        <form id="detectForm">
+            <div class="form-group">
+                <div class="dropzone" id="imageDropzone">
+                    <div class="dropzone-icon">
+                        <i class="fa-solid fa-file-image"></i>
+                    </div>
+                    <h4>Upload Crowd Photo</h4>
+                    <p>JPG, PNG, WEBP (Supports multiple people)</p>
+                    <input type="file" id="imageInput" name="image" accept="image/*" style="display: none;" required>
+                </div>
+            </div>
+
+            <div id="imagePreviewContainer" style="display: none; margin-bottom: 1rem;">
+                <img id="imagePreview" src="" alt="Preview" style="width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border-glass);">
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Detect & Identify Faces
+            </button>
+        </form>
+    </div>
+
+    <!-- Output Display Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-eye"></i> Recognition Results</h3>
+            <div id="summaryBadges" style="display: flex; gap: 0.5rem;"></div>
+        </div>
+
+        <div id="loader" style="display: none; text-align: center; padding: 3rem;">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--accent-primary); margin-bottom: 1rem;"></i>
+            <p>Processing crowd image through face detection & embedding neural net...</p>
+        </div>
+
+        <div id="resultContent" style="display: none;">
+            <div class="media-container" style="margin-bottom: 1.5rem;">
+                <img id="annotatedImage" src="" alt="Annotated Output">
+            </div>
+
+            <h4 style="margin-bottom: 1rem; font-size: 1rem;"><i class="fa-solid fa-users"></i> Detected People Summary</h4>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Face #</th>
+                            <th>Identity Name</th>
+                            <th>Registration ID</th>
+                            <th>Department</th>
+                            <th>Similarity Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detectionTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="placeholderText" style="text-align: center; color: var(--text-muted); padding: 4rem 2rem;">
+            <i class="fa-solid fa-users-viewfinder" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.4;"></i>
+            <p>Upload a crowd photograph on the left to start multi-person identity detection.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const imageDropzone = document.getElementById('imageDropzone');
+    const imageInput = document.getElementById('imageInput');
+    const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const detectForm = document.getElementById('detectForm');
+    
+    const loader = document.getElementById('loader');
+    const resultContent = document.getElementById('resultContent');
+    const placeholderText = document.getElementById('placeholderText');
+    const annotatedImage = document.getElementById('annotatedImage');
+    const summaryBadges = document.getElementById('summaryBadges');
+    const tableBody = document.getElementById('detectionTableBody');
+
+    imageDropzone.addEventListener('click', () => imageInput.click());
+
+    imageInput.addEventListener('change', () => {
+        if (imageInput.files.length > 0) {
+            const file = imageInput.files[0];
+            imagePreview.src = URL.createObjectURL(file);
+            imagePreviewContainer.style.display = 'block';
+        }
+    });
+
+    detectForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!imageInput.files.length) return;
+
+        placeholderText.style.display = 'none';
+        resultContent.style.display = 'none';
+        loader.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('image', imageInput.files[0]);
+
+        try {
+            const res = await fetch('/detect', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            loader.style.display = 'none';
+
+            if (data.success) {
+                resultContent.style.display = 'block';
+                annotatedImage.src = data.image_url + '?t=' + new Date().getTime();
+
+                summaryBadges.innerHTML = `
+                    <span class="badge badge-indigo"><i class="fa-solid fa-users"></i> Detected: ${data.total_detected}</span>
+                    <span class="badge badge-emerald"><i class="fa-solid fa-check"></i> Recognized: ${data.recognized_count}</span>
+                    <span class="badge badge-rose"><i class="fa-solid fa-question"></i> Unknown: ${data.unknown_count}</span>
+                `;
+
+                tableBody.innerHTML = '';
+                data.detections.forEach(det => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>#${det.face_id}</td>
+                        <td><strong>${det.name}</strong></td>
+                        <td>${det.registration_id}</td>
+                        <td>${det.department}</td>
+                        <td><strong>${(det.similarity * 100).toFixed(1)}%</strong></td>
+                        <td>${det.is_match ? 
+                            '<span class="badge badge-emerald">MATCHED</span>' : 
+                            '<span class="badge badge-rose">UNKNOWN</span>'}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } else {
+                alert(data.error || 'Detection failed.');
+                placeholderText.style.display = 'block';
+            }
+        } catch (err) {
+            loader.style.display = 'none';
+            alert('Server error occurred during image processing.');
+            placeholderText.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

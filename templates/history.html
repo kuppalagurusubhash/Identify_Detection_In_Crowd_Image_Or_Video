@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block page_title %}Detection History Logs{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-clock-rotate-left"></i> Historical Detection Activity</h3>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <a href="{{ url_for('history_page') }}" class="btn btn-secondary {% if not current_filter %}btn-primary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">All</a>
+            <a href="{{ url_for('history_page', source_type='image') }}" class="btn btn-secondary {% if current_filter == 'image' %}btn-primary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Image</a>
+            <a href="{{ url_for('history_page', source_type='video') }}" class="btn btn-secondary {% if current_filter == 'video' %}btn-primary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Video</a>
+            <a href="{{ url_for('url_for', endpoint='history_page', source_type='live') if false else url_for('history_page', source_type='live') }}" class="btn btn-secondary {% if current_filter == 'live' %}btn-primary{% endif %}" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Live</a>
+            <a href="/api/export_history" class="btn btn-primary" style="background: var(--accent-emerald);"><i class="fa-solid fa-file-csv"></i> Export CSV</a>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Log ID</th>
+                    <th>Person Identity</th>
+                    <th>Source Type</th>
+                    <th>Source Identifier</th>
+                    <th>Similarity Score</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if history %}
+                    {% for h in history %}
+                    <tr>
+                        <td>#{{ h.detection_id }}</td>
+                        <td>
+                            {% if h.person_name == 'Unknown' %}
+                                <span class="badge badge-rose"><i class="fa-solid fa-question"></i> Unknown</span>
+                            {% else %}
+                                <span class="badge badge-emerald"><i class="fa-solid fa-check"></i> {{ h.person_name }}</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge badge-indigo">{{ h.source_type|upper }}</span></td>
+                        <td>{{ h.source_name }}</td>
+                        <td><strong>{{ (h.confidence * 100)|round(1) }}%</strong></td>
+                        <td style="color: var(--text-muted);">{{ h.timestamp }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                            No detection events logged yet.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

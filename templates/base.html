@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Crowd Identity Detection{% endblock %}</title>
+    <!-- FontAwesome & Chart.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="brand-logo">
+            <div class="brand-icon">
+                <i class="fa-solid fa-face-smile-beam"></i>
+            </div>
+            <div class="brand-text">
+                <h2>AuraID Vision</h2>
+                <p>Crowd Identity AI</p>
+            </div>
+        </div>
+        <ul class="nav-list">
+            <li>
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('register') }}" class="nav-link {% if request.endpoint == 'register' %}active{% endif %}">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Register Person</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('detect_image') }}" class="nav-link {% if request.endpoint == 'detect_image' %}active{% endif %}">
+                    <i class="fa-solid fa-users-rectangle"></i>
+                    <span>Crowd Detection</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('detect_video') }}" class="nav-link {% if request.endpoint == 'detect_video' %}active{% endif %}">
+                    <i class="fa-solid fa-video"></i>
+                    <span>Video Detection</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('live_camera') }}" class="nav-link {% if request.endpoint == 'live_camera' %}active{% endif %}">
+                    <i class="fa-solid fa-camera-web"></i>
+                    <span>Live Stream</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('persons_page') }}" class="nav-link {% if request.endpoint == 'persons_page' %}active{% endif %}">
+                    <i class="fa-solid fa-address-book"></i>
+                    <span>Registered DB</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('history_page') }}" class="nav-link {% if request.endpoint == 'history_page' %}active{% endif %}">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Detection Logs</span>
+                </a>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content Layout -->
+    <div class="main-wrapper">
+        <header class="top-bar">
+            <div class="page-title">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+            </div>
+            <div class="user-badge">
+                <span class="status-dot"></span>
+                <span>System Engine: Active</span>
+            </div>
+        </header>
+
+        <main class="content-area">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

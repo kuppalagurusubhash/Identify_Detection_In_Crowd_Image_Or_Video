@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block page_title %}Registered Identity Database{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-address-book"></i> Authorized Registered Persons</h3>
+        <a href="{{ url_for('register') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add New Person</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#ID</th>
+                    <th>Full Name</th>
+                    <th>Registration ID</th>
+                    <th>Department</th>
+                    <th>Facial Samples</th>
+                    <th>Date Registered</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if persons %}
+                    {% for p in persons %}
+                    <tr id="row-{{ p.person_id }}">
+                        <td>#{{ p.person_id }}</td>
+                        <td><strong>{{ p.name }}</strong></td>
+                        <td><span class="badge badge-indigo">{{ p.registration_id }}</span></td>
+                        <td>{{ p.department }}</td>
+                        <td><span class="badge badge-emerald"><i class="fa-solid fa-images"></i> {{ p.sample_count }} Sample(s)</span></td>
+                        <td style="color: var(--text-muted);">{{ p.created_at }}</td>
+                        <td>
+                            <button onclick="deletePerson({{ p.person_id }}, '{{ p.name }}')" class="btn btn-danger" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 3rem;">
+                            No registered persons found in database. Click 'Add New Person' to register an identity.
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function deletePerson(personId, name) {
+    if (confirm(`Are you sure you want to remove ${name} from the registered database?`)) {
+        try {
+            const res = await fetch(`/api/delete_person/${personId}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById(`row-${personId}`).remove();
+            } else {
+                alert('Could not delete record.');
+            }
+        } catch (err) {
+            alert('Server error.');
+        }
+    }
+}
+</script>
+{% endblock %}

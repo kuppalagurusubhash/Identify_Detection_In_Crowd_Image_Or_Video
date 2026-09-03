@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block page_title %}System Overview & Analytics{% endblock %}
+
+{% block content %}
+<!-- KPI Stats Row -->
+<div class="grid-stats">
+    <div class="card-stat">
+        <div class="stat-icon indigo">
+            <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ stats.total_registered }}</h3>
+            <p>Registered Identities</p>
+        </div>
+    </div>
+    <div class="card-stat">
+        <div class="stat-icon emerald">
+            <i class="fa-solid fa-expand"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ stats.detections_today }}</h3>
+            <p>Detections Today</p>
+        </div>
+    </div>
+    <div class="card-stat">
+        <div class="stat-icon amber">
+            <i class="fa-solid fa-bullseye"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ stats.match_rate }}%</h3>
+            <p>Recognition Accuracy</p>
+        </div>
+    </div>
+    <div class="card-stat">
+        <div class="stat-icon rose">
+            <i class="fa-solid fa-user-secret"></i>
+        </div>
+        <div class="stat-info">
+            <h3>{{ stats.total_unknown }}</h3>
+            <p>Unidentified Crowd</p>
+        </div>
+    </div>
+</div>
+
+<!-- Workflow Action Cards -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <i class="fa-solid fa-user-plus" style="font-size: 2.2rem; color: var(--accent-primary); margin-bottom: 1rem;"></i>
+        <h3 style="margin-bottom: 0.5rem;">Register Identity</h3>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">Add authorized individuals with photo samples and extract deep embeddings.</p>
+        <a href="{{ url_for('register') }}" class="btn btn-primary">Go to Register</a>
+    </div>
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <i class="fa-solid fa-image" style="font-size: 2.2rem; color: var(--accent-emerald); margin-bottom: 1rem;"></i>
+        <h3 style="margin-bottom: 0.5rem;">Crowd Image Recognition</h3>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">Upload crowd photos to simultaneously detect and label multiple faces.</p>
+        <a href="{{ url_for('detect_image') }}" class="btn btn-primary" style="background: var(--accent-emerald);">Analyze Image</a>
+    </div>
+    <div class="card" style="text-align: center; padding: 2rem;">
+        <i class="fa-solid fa-video" style="font-size: 2.2rem; color: var(--accent-cyan); margin-bottom: 1rem;"></i>
+        <h3 style="margin-bottom: 0.5rem;">Video Stream Processing</h3>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem;">Process crowd videos with temporal tracking and bounding box annotations.</p>
+        <a href="{{ url_for('detect_video') }}" class="btn btn-primary" style="background: var(--accent-cyan);">Process Video</a>
+    </div>
+</div>
+
+<!-- Recent Detection Logs Table -->
+<div class="card">
+    <div class="card-header">
+        <h3><i class="fa-solid fa-list-check"></i> Recent Detection Events</h3>
+        <a href="{{ url_for('history_page') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-right"></i> View All Logs</a>
+    </div>
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#ID</th>
+                    <th>Identity Name</th>
+                    <th>Source Type</th>
+                    <th>Source Identifier</th>
+                    <th>Match Confidence</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if stats.recent_detections %}
+                    {% for item in stats.recent_detections %}
+                    <tr>
+                        <td>#{{ item.detection_id }}</td>
+                        <td>
+                            {% if item.person_name == 'Unknown' %}
+                                <span class="badge badge-rose"><i class="fa-solid fa-question"></i> Unknown</span>
+                            {% else %}
+                                <span class="badge badge-emerald"><i class="fa-solid fa-check"></i> {{ item.person_name }}</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge badge-indigo">{{ item.source_type|upper }}</span></td>
+                        <td>{{ item.source_name }}</td>
+                        <td><strong>{{ (item.confidence * 100)|round(1) }}%</strong></td>
+                        <td style="color: var(--text-muted);">{{ item.timestamp }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No detection logs recorded yet. Upload a crowd image or video to start!</td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

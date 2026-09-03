@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block page_title %}Identity Registration Module{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-user-plus"></i> Register Authorized Person</h3>
+        </div>
+        <form id="registerForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name">Full Name *</label>
+                <input type="text" id="name" name="name" class="form-control" placeholder="e.g. Rahul Sharma" required>
+            </div>
+            <div class="form-group">
+                <label for="registration_id">Registration ID / Employee ID *</label>
+                <input type="text" id="registration_id" name="registration_id" class="form-control" placeholder="e.g. REVA2026-001" required>
+            </div>
+            <div class="form-group">
+                <label for="department">Department / Role *</label>
+                <input type="text" id="department" name="department" class="form-control" placeholder="e.g. Computer Science Engineering" required>
+            </div>
+
+            <div class="form-group">
+                <label>Facial Photographs (1 to 5 images) *</label>
+                <div class="dropzone" id="dropzone">
+                    <div class="dropzone-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <h4>Drag & Drop Face Photos Here</h4>
+                    <p>Or click to browse from device (JPEG, PNG)</p>
+                    <input type="file" id="photos" name="photos" multiple accept="image/*" style="display: none;" required>
+                </div>
+                <div id="fileList" style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--accent-emerald);"></div>
+            </div>
+
+            <div id="statusAlert" style="display: none; padding: 0.75rem 1rem; border-radius: var(--radius-md); margin-bottom: 1.25rem; font-size: 0.88rem;"></div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 0.85rem;">
+                <i class="fa-solid fa-fingerprint"></i> Generate & Store Facial Embeddings
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('photos');
+    const fileList = document.getElementById('fileList');
+    const registerForm = document.getElementById('registerForm');
+    const statusAlert = document.getElementById('statusAlert');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            updateFileList();
+        }
+    });
+
+    fileInput.addEventListener('change', updateFileList);
+
+    function updateFileList() {
+        if (fileInput.files.length > 0) {
+            fileList.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${fileInput.files.length} file(s) selected: ` + 
+                Array.from(fileInput.files).map(f => f.name).join(', ');
+        } else {
+            fileList.innerHTML = '';
+        }
+    }
+
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        statusAlert.style.display = 'none';
+
+        const formData = new FormData(registerForm);
+
+        try {
+            const response = await fetch('/register', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            statusAlert.style.display = 'block';
+            if (data.success) {
+                statusAlert.style.background = 'rgba(16, 185, 129, 0.15)';
+                statusAlert.style.border = '1px solid var(--accent-emerald)';
+                statusAlert.style.color = 'var(--accent-emerald)';
+                statusAlert.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${data.message}`;
+                registerForm.reset();
+                fileList.innerHTML = '';
+            } else {
+                statusAlert.style.background = 'rgba(244, 63, 94, 0.15)';
+                statusAlert.style.border = '1px solid var(--accent-rose)';
+                statusAlert.style.color = 'var(--accent-rose)';
+                statusAlert.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${data.message || 'Registration failed.'}`;
+            }
+        } catch (err) {
+            statusAlert.style.display = 'block';
+            statusAlert.style.background = 'rgba(244, 63, 94, 0.15)';
+            statusAlert.style.border = '1px solid var(--accent-rose)';
+            statusAlert.style.color = 'var(--accent-rose)';
+            statusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Server communication error.`;
+        }
+    });
+</script>
+{% endblock %}

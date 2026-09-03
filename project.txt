@@ -1,0 +1,659 @@
+Project Title
+
+AI-Based Identity Detection and Recognition in Crowd Images and Video Streams
+
+Abstract
+
+This project proposes an AI-based computer vision system capable of detecting and identifying multiple individuals from crowd images, recorded videos, and live camera feeds. The system first detects faces or persons present in each frame and then extracts unique facial features using a deep-learning-based recognition model. These extracted features are compared with previously registered identities stored in a database.
+
+When a match is found, the system displays the person's name, confidence or similarity score, and other permitted information. If no suitable match is found, the individual is marked as Unknown.
+
+The proposed system is designed to work with multiple individuals simultaneously and aims to handle practical challenges such as changes in illumination, facial orientation, partial occlusion, distance from the camera, and variations in image quality. The MVP demonstrates the complete detection-to-identification pipeline and can later be extended for applications such as authorized attendance systems, controlled-access environments, event management, and consent-based identity verification.
+
+Problem Statement
+
+Identifying a particular individual manually from a crowded image or long video recording is difficult and time-consuming.
+
+Traditional systems may work effectively when only one person is standing directly in front of a camera, but their performance becomes more challenging when:
+
+many people appear simultaneously,
+faces are small or partially hidden,
+people are moving,
+lighting conditions change,
+faces appear at different angles,
+recorded videos contain thousands of frames,
+the person being searched for appears only briefly.
+
+Therefore, there is a need for an automated system that can detect multiple people and determine whether any of them correspond to identities stored in an authorized database.
+
+Proposed Solution
+
+The system will create a computer-vision pipeline:
+
+Image / Video / Webcam
+
+↓
+
+Frame Extraction
+
+↓
+
+Image Preprocessing
+
+↓
+
+Face / Person Detection
+
+↓
+
+Face Alignment
+
+↓
+
+Feature Extraction
+
+↓
+
+Generate Face Embedding
+
+↓
+
+Compare With Registered Database
+
+↓
+
+Identity Match
+
+↓
+
+Name + Similarity Score / Unknown
+
+↓
+
+Results Dashboard
+
+For example, suppose one frame contains 8 people.
+
+The system may return:
+
+Detected Persons: 8
+
+1. Rahul      — 94% match
+2. Priya      — 91% match
+3. Unknown
+4. Unknown
+5. Arun       — 88% match
+6. Unknown
+7. Kiran      — 93% match
+8. Unknown
+
+The bounding boxes and identities can also be displayed directly on the image/video.
+
+MVP Scope
+
+For your internship, I suggest building the MVP in four main modules.
+
+1. Identity Registration
+
+An administrator can register a person.
+
+Example:
+
+Name: Rahul
+ID: REVA001
+Department: CSE
+Images: 5–10 face photographs
+
+The system detects the face and generates a numerical representation called a face embedding.
+
+Instead of repeatedly comparing whole photographs, you store the embedding.
+
+Example:
+
+Rahul
+↓
+Face model
+↓
+Embedding vector
+
+[0.238, -0.123, 0.487, ...]
+2. Crowd Image Recognition
+
+The user uploads a crowd photograph.
+
+Example:
+
+crowd.jpg
+
+The system:
+
+detects all faces
+      ↓
+extracts each face
+      ↓
+generates embeddings
+      ↓
+compares with database
+      ↓
+displays identity
+
+Output:
+
+Rahul - 95%
+Unknown
+Priya - 90%
+Arun - 87%
+
+This should be your first successful MVP milestone.
+
+3. Video Recognition
+
+Input:
+
+crowd_video.mp4
+
+OpenCV reads the video frame by frame.
+
+video
+ ↓
+frame 1
+frame 2
+frame 3
+...
+
+The system detects and recognizes people in selected frames and annotates the video.
+
+For performance, you do not necessarily need recognition on every single frame.
+
+For example:
+
+Process every 3rd or 5th frame
+
+Then use tracking between frames.
+
+4. Live Camera Detection
+
+The final MVP can support:
+
+Laptop webcam
+or
+IP camera
+
+The application displays:
+
+┌──────────────────────────────┐
+│ LIVE CAMERA                  │
+│                              │
+│  ┌───────┐      ┌───────┐   │
+│  │ Rahul │      │Unknown│   │
+│  │ 94%   │      │       │   │
+│  └───────┘      └───────┘   │
+│                              │
+└──────────────────────────────┘
+Recommended Technology Stack
+
+For your project, I recommend Python as the main language.
+
+Component	Technology
+Programming	Python 3.11
+Image/Video Processing	OpenCV
+Face Detection	RetinaFace or YOLO
+Face Recognition	InsightFace / ArcFace
+Deep Learning	PyTorch / ONNX Runtime
+Numerical Processing	NumPy
+Data Processing	Pandas
+Backend API	Flask or FastAPI
+Frontend	HTML/CSS/JavaScript or React
+Database	SQLite for MVP
+Advanced Database	PostgreSQL
+Face Vector Search	FAISS
+Video Tracking	ByteTrack / DeepSORT
+Charts/UI	Chart.js
+Development	VS Code
+Version Control	Git + GitHub
+
+For your MVP, I would specifically use:
+
+Python
+OpenCV
+InsightFace
+RetinaFace/SCRFD
+NumPy
+FAISS
+Flask
+SQLite
+HTML/CSS/JavaScript
+
+That is enough to build a strong academic prototype.
+
+Why InsightFace / ArcFace?
+
+You may initially think of using a simple OpenCV Haar Cascade.
+
+Haar Cascades are useful for learning, but I would not make them the main recognition technology for this project.
+
+A stronger architecture is:
+
+Face Detection
+      ↓
+SCRFD / RetinaFace
+
+Face Recognition
+      ↓
+ArcFace / InsightFace
+
+ArcFace generates highly discriminative facial embeddings.
+
+Conceptually:
+
+Person A face
+      ↓
+ArcFace
+      ↓
+Vector A
+
+Person B face
+      ↓
+ArcFace
+      ↓
+Vector B
+
+Then similarity is measured using something such as cosine similarity.
+
+Matching Logic
+
+Suppose a registered person's embedding is:
+
+Database embedding
+
+and the detected face generates:
+
+Query embedding
+
+Calculate:
+
+$$ CosineSimilarity = \frac{A \cdot B} {\|A\|\|B\|} $$
+
+If similarity exceeds a tuned threshold:
+
+MATCH
+
+Otherwise:
+
+UNKNOWN
+
+Important: do not blindly describe the score as a literal probability such as “95% certain” unless your system has been calibrated that way. In your report, similarity score is a safer technical term.
+
+System Architecture
+
+Your complete architecture could be:
+
+                     USER
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+        Upload Image         Upload Video
+             │                   │
+             └─────────┬─────────┘
+                       │
+                 Flask / FastAPI
+                       │
+                       ▼
+                OpenCV Processing
+                       │
+                       ▼
+                 Face Detection
+                SCRFD / RetinaFace
+                       │
+                       ▼
+                 Face Alignment
+                       │
+                       ▼
+              ArcFace / InsightFace
+                       │
+                       ▼
+                  Embeddings
+                       │
+                ┌──────┴───────┐
+                │              │
+          Registered DB     Query Face
+                │              │
+                └──────┬───────┘
+                       │
+                Cosine Similarity
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+            Match              No Match
+             │                   │
+          Identity             Unknown
+             │
+             ▼
+          Dashboard
+Database Design
+
+For the MVP, SQLite is sufficient.
+
+persons
+person_id
+name
+registration_id
+department
+created_at
+face_embeddings
+embedding_id
+person_id
+embedding
+image_path
+created_at
+detections
+detection_id
+person_id
+source_type
+source_name
+confidence
+timestamp
+
+For example:
+
+persons
+--------------------------------
+1 | Rahul | REV001 | CSE
+2 | Priya | REV002 | AIML
+Frontend MVP
+
+I suggest a dashboard with these pages.
+
+LOGIN / HOME
+
+       ↓
+
+DASHBOARD
+├── Register Person
+├── Crowd Image Detection
+├── Video Detection
+├── Live Camera
+├── Registered Persons
+└── Detection History
+
+The main dashboard could show:
+
+AI CROWD IDENTITY DETECTION
+
+Registered Persons: 25
+Faces Detected Today: 118
+Identified: 74
+Unknown: 44
+
+Then:
+
+[ Upload Crowd Image ]
+
+[ Upload Video ]
+
+[ Start Live Camera ]
+Example Detection Screen
+
+After uploading an image:
+
+Crowd Identity Detection
+
+------------------------------------------------
+|                                              |
+|           PROCESSED CROWD IMAGE              |
+|                                              |
+| [Rahul 0.91]    [Unknown]     [Priya 0.88]   |
+|                                              |
+------------------------------------------------
+
+Detected:     12
+Recognized:    5
+Unknown:       7
+
+Identified People
+
+Name        Similarity
+Rahul       0.91
+Priya       0.88
+Arun        0.86
+Important Difference: Detection vs Recognition
+
+This will very likely be asked during your presentation.
+
+Face Detection
+
+Answers:
+
+“Where is the face?”
+
+Example:
+
+[x1, y1, x2, y2]
+
+Face Recognition
+
+Answers:
+
+“Whose face is this?”
+
+Example:
+
+Face → Rahul
+
+Your project requires both.
+
+Detection
+     ↓
+Recognition
+Person Detection vs Face Detection
+
+Your project statement mentions both faces or persons.
+
+These are not identical tasks.
+
+Person detection:
+
+YOLO
+↓
+detect complete human body
+
+Face recognition:
+
+InsightFace
+↓
+identify face
+
+A stronger version of the project can combine them:
+
+YOLO
+↓
+Person Detection
+
+      +
+
+InsightFace
+↓
+Face Recognition
+
+However, for your MVP, prioritize face-based identity recognition because person detection alone cannot reliably tell you the person's identity.
+
+Handling Crowd Videos
+
+Crowd videos can have the same person appearing in hundreds of frames.
+
+Without tracking:
+
+Frame 1 → Rahul
+Frame 2 → Rahul
+Frame 3 → Rahul
+Frame 4 → Rahul
+
+The model performs unnecessary recognition repeatedly.
+
+A better architecture uses:
+
+Detection
+    ↓
+Recognition
+    ↓
+Tracking
+
+For example:
+
+Rahul
+Track ID = 17
+
+Then ByteTrack or DeepSORT follows that person across consecutive frames.
+
+That can be added as the next stage after your basic MVP works.
+
+Challenges Mentioned in Your Project
+
+Your screenshots specifically mention issues such as partial occlusion, different orientations and lighting. Your implementation can address them approximately like this:
+
+Problem	Approach
+Low light	CLAHE / brightness correction
+Different face angles	RetinaFace/SCRFD + ArcFace
+Multiple people	Multi-face detection
+Small faces	Higher-resolution processing
+Partial occlusion	robust embeddings + thresholding
+Movement	tracking
+Duplicate detections	NMS / tracking
+Unknown people	similarity threshold
+Large identity database	FAISS
+
+Do not claim that the MVP completely solves occlusion or pose variation. Instead say it is designed and evaluated to be more robust under those conditions.
+
+MVP Development Phases
+
+You can build this in roughly this order:
+
+Phase 1 — Environment and basic detection
+Install Python, OpenCV and InsightFace. Detect all faces in one image and draw bounding boxes.
+Phase 2 — Face registration
+Create a small database of perhaps 5–10 authorized participants, preferably using consented images. Generate and store several embeddings per identity.
+Phase 3 — Identity matching
+Detect a face, extract its embedding, compare it with the registered database and return the best match or Unknown.
+Phase 4 — Crowd image MVP
+Detect and recognize several faces simultaneously in a crowd image.
+Phase 5 — Video
+Read videos frame-by-frame and display recognized identities.
+Phase 6 — Web application
+Add the Flask API and a simple dashboard for registration, uploads and results.
+Phase 7 — Tracking and evaluation
+Add ByteTrack/DeepSORT and measure performance under controlled test conditions.
+Suggested Project Folder Structure
+crowd-identity-detection/
+│
+├── app.py
+│
+├── requirements.txt
+│
+├── README.md
+│
+├── database/
+│   └── identity.db
+│
+├── models/
+│
+├── services/
+│   ├── face_detector.py
+│   ├── face_recognizer.py
+│   ├── embedding_service.py
+│   ├── matcher.py
+│   └── video_processor.py
+│
+├── utils/
+│   ├── preprocessing.py
+│   └── database.py
+│
+├── static/
+│   ├── css/
+│   ├── js/
+│   └── outputs/
+│
+├── templates/
+│   ├── index.html
+│   ├── register.html
+│   ├── detect.html
+│   └── results.html
+│
+├── uploads/
+│
+└── datasets/
+    └── registered_faces/
+        ├── Rahul/
+        ├── Priya/
+        └── Arun/
+
+This structure will make the project look much more organized than placing the entire implementation in one Python file.
+
+Expected MVP Output
+
+Your final demonstration could be:
+
+Step 1
+Register Rahul using several authorized photos.
+
+Step 2
+Register Priya.
+
+Step 3
+Upload a crowd image containing:
+Rahul + Priya + 5 other people.
+
+Step 4
+System detects 7 faces.
+
+Step 5
+Output:
+
+Rahul      similarity: 0.91
+Priya      similarity: 0.89
+Unknown
+Unknown
+Unknown
+Unknown
+Unknown
+
+Then demonstrate the same with a short video.
+
+That is already a legitimate end-to-end MVP.
+
+Expected Project Outcome
+
+You can put this almost directly into your internship document:
+
+The expected outcome of the project is a functional AI-based identity detection prototype capable of processing crowd images, recorded videos and optionally live camera streams. The system will detect multiple faces, extract facial embeddings, compare them against an authorized registered identity database and display the corresponding identity or classify the detected person as unknown. The application will provide annotated visual output, similarity scores and detection information through a user-friendly interface. The prototype will also be evaluated under variations in lighting, pose, crowd density and partial occlusion.
+
+Core Innovation / Strong Point
+
+Instead of describing the project simply as:
+
+“Face recognition using OpenCV”
+
+present it as:
+
+A multi-person identity retrieval pipeline for crowd imagery using deep facial embeddings, similarity search and temporal tracking.
+
+That sounds more accurate to the actual engineering problem and gives you room to demonstrate detection, recognition, database search and video processing.
+
+One important constraint should also be part of the design: use consented/authorized identities, minimize stored personal information, protect embeddings and images, and keep clear retention/deletion controls. The project description itself mentions privacy safeguards, and those protections will also strengthen your report and viva.
+
+For your first MVP, I recommend this exact combination:
+
+Python
+        +
+OpenCV
+        +
+InsightFace / ArcFace
+        +
+SCRFD
+        +
+FAISS
+        +
+SQLite
+        +
+Flask
+        +
+HTML / CSS / JavaScript

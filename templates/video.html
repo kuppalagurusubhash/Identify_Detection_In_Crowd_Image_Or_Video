@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block page_title %}Crowd Video Analysis & Tracking{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 350px 1fr; gap: 1.5rem;">
+    <!-- Video Upload Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-file-video"></i> Upload Crowd Video</h3>
+        </div>
+        <form id="videoForm">
+            <div class="form-group">
+                <div class="dropzone" id="videoDropzone">
+                    <div class="dropzone-icon">
+                        <i class="fa-solid fa-film"></i>
+                    </div>
+                    <h4>Select Video File</h4>
+                    <p>MP4, AVI, MOV (Crowd sequences)</p>
+                    <input type="file" id="videoInput" name="video" accept="video/*" style="display: none;" required>
+                </div>
+            </div>
+
+            <div id="videoName" style="font-size: 0.85rem; color: var(--accent-cyan); margin-bottom: 1rem;"></div>
+
+            <button type="submit" id="processBtn" class="btn btn-primary" style="width: 100%; justify-content: center; background: var(--accent-cyan);">
+                <i class="fa-solid fa-play"></i> Process Video Stream
+            </button>
+        </form>
+    </div>
+
+    <!-- Output Player & Stats -->
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fa-solid fa-circle-play"></i> Processed Video Player</h3>
+            <div id="videoBadges"></div>
+        </div>
+
+        <div id="videoLoader" style="display: none; text-align: center; padding: 4rem 2rem;">
+            <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--accent-cyan); margin-bottom: 1rem;"></i>
+            <h3>Processing Crowd Video...</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem;">Running multi-frame face detection, embedding matching, and temporal bounding box annotation.</p>
+        </div>
+
+        <div id="videoResultContainer" style="display: none;">
+            <div class="media-container" style="margin-bottom: 1.5rem;">
+                <video id="processedPlayer" controls style="width: 100%; border-radius: var(--radius-md);">
+                    <source id="videoSource" src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+
+            <div class="grid-stats" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 0;">
+                <div class="card-stat" style="padding: 1rem;">
+                    <div class="stat-info">
+                        <h3 id="statTotalFrames">0</h3>
+                        <p>Total Frames</p>
+                    </div>
+                </div>
+                <div class="card-stat" style="padding: 1rem;">
+                    <div class="stat-info">
+                        <h3 id="statTotalFaces">0</h3>
+                        <p>Faces Processed</p>
+                    </div>
+                </div>
+                <div class="card-stat" style="padding: 1rem;">
+                    <div class="stat-info">
+                        <h3 id="statRecognized" style="color: var(--accent-emerald);">0</h3>
+                        <p>Recognized Matches</p>
+                    </div>
+                </div>
+                <div class="card-stat" style="padding: 1rem;">
+                    <div class="stat-info">
+                        <h3 id="statUnknown" style="color: var(--accent-rose);">0</h3>
+                        <p>Unknown Faces</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="videoPlaceholder" style="text-align: center; color: var(--text-muted); padding: 4rem 2rem;">
+            <i class="fa-solid fa-video-slash" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.4;"></i>
+            <p>Upload a crowd video clip to initiate automated frame-by-frame recognition and identity tracking.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const videoDropzone = document.getElementById('videoDropzone');
+    const videoInput = document.getElementById('videoInput');
+    const videoName = document.getElementById('videoName');
+    const videoForm = document.getElementById('videoForm');
+    const videoLoader = document.getElementById('videoLoader');
+    const videoResultContainer = document.getElementById('videoResultContainer');
+    const videoPlaceholder = document.getElementById('videoPlaceholder');
+
+    const processedPlayer = document.getElementById('processedPlayer');
+    const videoSource = document.getElementById('videoSource');
+
+    videoDropzone.addEventListener('click', () => videoInput.click());
+
+    videoInput.addEventListener('change', () => {
+        if (videoInput.files.length > 0) {
+            videoName.innerHTML = `<i class="fa-solid fa-file-video"></i> ${videoInput.files[0].name}`;
+        }
+    });
+
+    videoForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!videoInput.files.length) return;
+
+        videoPlaceholder.style.display = 'none';
+        videoResultContainer.style.display = 'none';
+        videoLoader.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('video', videoInput.files[0]);
+
+        try {
+            const res = await fetch('/video', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            videoLoader.style.display = 'none';
+
+            if (data.success) {
+                videoResultContainer.style.display = 'block';
+                videoSource.src = data.video_url + '?t=' + new Date().getTime();
+                processedPlayer.load();
+
+                document.getElementById('statTotalFrames').innerText = data.summary.total_frames;
+                document.getElementById('statTotalFaces').innerText = data.summary.total_faces;
+                document.getElementById('statRecognized').innerText = data.summary.recognized_faces;
+                document.getElementById('statUnknown').innerText = data.summary.unknown_faces;
+            } else {
+                alert(data.error || 'Video processing failed.');
+                videoPlaceholder.style.display = 'block';
+            }
+        } catch (err) {
+            videoLoader.style.display = 'none';
+            alert('Error communicating with server.');
+            videoPlaceholder.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}
